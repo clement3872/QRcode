@@ -195,9 +195,7 @@ def get_blocks(QR,n_blocks):
 
 
 def filter_QR(QR):
-    ctrl_bit1 = QR[22][8]
-    ctrl_bit2 = QR[23][8]
-    ctrl_tuple = (ctrl_bit1, ctrl_bit2) 
+    ctrl_tuple = (QR[22][8], QR[23][8]) 
 
     filtered = []
     for i in range(len(QR)):
@@ -210,10 +208,7 @@ def filter_QR(QR):
 
 def total_decode(blocks, data_type):
     sentence = ""
-    def bin_to_hex(b):
-        n = int(b,2)
-        n = hex(n)[2:]
-        return n
+    convert_to_type = [lambda s: hex(int(s,2))[2:], lambda s: chr(int(s,2))]
 
     for block in blocks:
         characterBits = decode_Hamming74(block[:7]) + decode_Hamming74(block[7:len(block)])
@@ -222,11 +217,7 @@ def total_decode(blocks, data_type):
         for b in characterBits: s += str(b)
 
         # print(s, int(s,2), chr(int(s,2)))
-
-        if data_type == 1:
-            sentence += chr(int(s,2))
-        else:
-            sentence += bin_to_hex(s)
+        sentence += convert_to_type[data_type](s)
 
     return sentence
 
@@ -241,8 +232,6 @@ def get_results(QR):
         n_blocks = int(b,2)
 
         return n_blocks
-
-
 
     QR = correct_sens_QR(QR)
     n_blocks = get_number_of_blocks(QR)
