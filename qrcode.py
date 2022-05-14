@@ -1,6 +1,8 @@
 import PIL as pil
 from PIL import Image
 
+# donnée brute : ASCII
+# donnée numérique : un int
 
 def print_list(l):
     print()
@@ -107,8 +109,8 @@ def correct_sens_QR(QR):
     cond1 = part_top_left == corner_top_left
     cond2 = part_top_right == corner_top_right
     cond3 = part_bottom_left == corner_bottom_left
-
-    counter = 4
+    
+    counter = 0
     while not (cond1 and cond2 and cond3) and counter < 4:
         counter += 1
         QR = rotate_right(QR)
@@ -195,7 +197,7 @@ def get_blocks(QR,n_blocks):
 def filter_QR(QR):
     ctrl_bit1 = QR[22][8]
     ctrl_bit2 = QR[23][8]
-    ctrl_tuple = (ctrl_bit2, ctrl_bit1) # yes, reversed
+    ctrl_tuple = (ctrl_bit1, ctrl_bit2) 
 
     filtered = []
     for i in range(len(QR)):
@@ -205,19 +207,26 @@ def filter_QR(QR):
 
     return filtered
 
-def total_decode(blocks):
+
+def total_decode(blocks, data_type):
     sentence = ""
+    def bin_to_hex(b):
+        n = int(b,2)
+        n = hex(n)[2:]
+        return n
+
     for block in blocks:
         characterBits = decode_Hamming74(block[:7]) + decode_Hamming74(block[7:len(block)])
-        
         characterBits.reverse()
-        s = ""
+        s = "" # string bit for the char
         for b in characterBits: s += str(b)
-
 
         # print(s, int(s,2), chr(int(s,2)))
 
-        sentence += chr(int(s,2))
+        if data_type == 1:
+            sentence += chr(int(s,2))
+        else:
+            sentence += bin_to_hex(s)
 
     return sentence
 
@@ -233,19 +242,19 @@ def get_results(QR):
 
         return n_blocks
 
-    n_blocks = get_number_of_blocks(QR) # move at line 212 if needed after filter
 
 
     QR = correct_sens_QR(QR)
-    # print_list(QR)
+    n_blocks = get_number_of_blocks(QR)
+    data_type=QR[len(QR)-1][8]
     QR = filter_QR(QR)
 
     blocks = get_blocks(QR, n_blocks)
 
     # if QR!= QR: print_list(QR)
     # print_list(QR)
-
-    print("Result: ", total_decode(blocks))
+    
+    print("Result: ", total_decode(blocks, data_type))
 
 
     # print("\nControl b:")
@@ -270,16 +279,17 @@ path = open('tmp', 'r').read().replace('\\', '/').replace('\n','') + "/"
 folder_path = path + "Exemples/"
 """
 
-QR_damier_filename = "qr_code_damier_ascii.png"
-QR_filename = "qr_code_ssfiltre_ascii.png"
-QR_rotated_filename = "qr_code_ssfiltre_ascii_rotation.png"
-QR_ssfiltre_num_filename = "qr_code_ssfiltre_num.png"
-l_QR = [QR_damier_filename, QR_filename, QR_rotated_filename, QR_ssfiltre_num_filename]
+QR_damier_path = "qr_code_damier_ascii.png"
+QR_path = "qr_code_ssfiltre_ascii.png"
+QR_rotated_path = "qr_code_ssfiltre_ascii_rotation.png"
+QR_ssfiltre_num_path = "qr_code_ssfiltre_num.png"
+l_QR = [QR_damier_path, QR_path, QR_rotated_path, QR_ssfiltre_num_path]
 
 
 for QR in l_QR:
-    print("\n" + QR_ssfiltre_num_filename)
-    QR = loading(folder_path + QR_filename)
-    get_results(QR)
+    print("\n" + QR)
 
-input()
+    # currentQR = loading(folder_path + QR_filename)
+
+    get_results(loading(folder_path + QR))
+    # get_results(currentQR)
